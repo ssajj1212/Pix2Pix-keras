@@ -1,0 +1,18 @@
+name: dml_proj
+channels:
+- !!python/unicode
+  'defaults'
+dependencies:
+- keras
+- matplotlib
+- numpy
+- pandas
+- python=3.6
+- jupyter
+- scipy
+- pillow
+- scikit-image
+- tensorflow-gpu = 1.10.0
+- pydot # for plot model
+- pip:
+  - git+https://www.github.com/keras-team/keras-contrib.git
