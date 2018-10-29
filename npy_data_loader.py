@@ -27,7 +27,7 @@ class NPY_DataLoader():
             print("Typo, please specify data_type as train, val or test")
         self._path = path + '/%s' % (self._data_type)
         print('path: {}'.format(self._path))
-        #self._path = path + '/%s/%s' % (self.dataset_name, self._data_type)
+
         # Check whether there are images under the path
         if glob(self._path + '/*') == []:
             print("Please check dataset directory")
@@ -53,9 +53,6 @@ class NPY_DataLoader():
         if batch_size == 0:
             batch_size = self._data_size
 
-        # imgs_path = glob(self.path + '/%s/%s/*' % (self.dataset_name, self.data_type))
-
-        # imgs_path =  glob(self._path + '/*')
         batch_data_list = np.random.choice(self._data_list, size=batch_size)
 
         if not self.downsample_rate == 1:
@@ -65,16 +62,10 @@ class NPY_DataLoader():
 
         res = np.concatenate([arr[np.newaxis] for arr in arrs])
 
-        # print('concatenate array shape {}'.format(res.shape))
         # Imgs_A - real image, imgs_B - color annotation + boundary map
-
         imgs_A = res[:,:,:,:3]/127.5 - 1. # Normalize to [-1,1]
         imgs_B = res[:,:,:,3:6]/127.5 - 1. # Normalize to [-1,1]
-        #print('normalized...')
-        #print('img_b shape {}'.format(imgs_B.shape))
-        #print('reshape shape {}'.format(res.shape[:3]+(1,)))
         #imgs_B = np.concatenate((imgs_B,res[:,:,:,6].reshape(res.shape[:3]+(1,))),axis=3)
-        #print('concatenate img B array shape {}'.format(imgs_B.shape))
 
         return imgs_A, imgs_B
 
@@ -82,11 +73,9 @@ class NPY_DataLoader():
         '''
         Load batches of data, return a generator to save memory
         '''
-        # imgs_path = glob(self.path + '/%s/%s/*' % (self.dataset_name, self.data_type))
         if batch_size == 0:
             batch_size = self._data_size
 
-        # imgs_path =  glob(self._path + '/*')
         self.n_batches = int(len(self._data_list) / batch_size)
 
         for i in range(self.n_batches-1):
@@ -102,33 +91,7 @@ class NPY_DataLoader():
             imgs_A = res[:,:,:,:3]/127.5 - 1. # Normalize to [-1,1]
             imgs_B = res[:,:,:,3:6]/127.5 - 1. # Normalize to [-1,1]
             #imgs_B = np.concatenate((imgs_B,res[:,:,:,6].reshape(res.shape[:3]+(1,))),axis=3)
-
-            #print('concatenate img B array shape {}'.format(imgs_B.shape))
-            '''
-
-            for data_path in batch_data_list:
-
-
-
-                img = self.read_image(img_path)
-                h, w, _ = img.shape
-                half_w = int(w/2)
-                img_A = img[:, :half_w, :]
-                img_B = img[:, half_w:, :]
-
-                img_A = imresize(img_A, self.img_res)
-                img_B = imresize(img_B, self.img_res)
-
-                if self._is_training and np.random.random() > 0.5:
-                        img_A = np.fliplr(img_A)
-                        img_B = np.fliplr(img_B)
-
-                imgs_A.append(img_A)
-                imgs_B.append(img_B)
-
-            imgs_A = np.array(imgs_A)/127.5 - 1.
-            imgs_B = np.array(imgs_B)/127.5 - 1.
-            '''
+]
 
             yield imgs_A, imgs_B
 

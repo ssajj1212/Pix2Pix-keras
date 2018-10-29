@@ -61,9 +61,6 @@ class Pix2Pix():
         # Define and compile generator and discriminator
         self.generator = self.build_generator()
         self.discriminator = self.build_discriminator()
-        #self.discriminator.compile(loss='mse',
-        #                            optimizer=optimizer,
-        #                            metrics=['accuracy'])
 
 
 
@@ -77,7 +74,6 @@ class Pix2Pix():
 
     def Initialize_dir_files(self):
         Training_file_name = str(datetime.datetime.now())
-        # self.file_obj = open('log/training_log_'+Training_file_name+'.txt','w')
         Training_file_name = str(datetime.datetime.now())
         os.chdir('logs')
         os.mkdir(Training_file_name)
@@ -86,7 +82,6 @@ class Pix2Pix():
         os.chdir('../saved_model')
         os.mkdir(Training_file_name)
         os.chdir('..')
-        # tensorboard_path = './logs/'+Training_file_name
         self.figure_path = './figures/'+ Training_file_name
         self.model_save_path = './saved_model/'+ Training_file_name
         self.log_path = './logs/' + Training_file_name
@@ -119,7 +114,6 @@ class Pix2Pix():
         # TO DO: Check generator, discriminator is initiated properly
 
         # Compile generator & discriminator
-        # self.generator().compile(loss = 'mae', optimizer = self.optimizer_discriminator)
         self.discriminator.trainable = False #unable trainable for discriminator before merge generator, discriminator together
 
         # Initiate DCGAN to merge generator and discriminator
@@ -184,26 +178,6 @@ class Pix2Pix():
             loss_block1.trainable = False
             return K.mean(K.square(loss_block1(img_true) - loss_block1(img_generated))) + 2*K.mean(K.square(loss_block2(img_true) - loss_block2(img_generated))) + 5*K.mean(K.square(loss_block3(img_true) - loss_block3(img_generated)))
 
-        # Preparing .log and tensorboard path
-        # Training_file_name = str(datetime.datetime.now())
-        # os.chdir('logs')
-        # os.mkdir(Training_file_name)
-        # os.chdir('../figures')
-        # os.mkdir(Training_file_name)
-        # os.chdir('../saved_model')
-        # os.mkdir(Training_file_name)
-        # os.chdir('..')
-        # tensorboard_path = './logs/'+Training_file_name
-        # figure_path = './figures/'+ Training_file_name
-        # model_save_path = './saved_model/'+ Training_file_name
-        # log_path = './logs/' + Training_file_name
-        # file_obj = open(log_path+'/training_log.txt','a')
-
-        # ----------------------------------------------
-        # Train preparation: compile generator, and cGAN
-        # ----------------------------------------------
-        # print('Initialize training ...')
-
         # Load data
         self.load_data(path = data_path)
 
@@ -213,8 +187,6 @@ class Pix2Pix():
             patch_size = self.patch_dim[:2]
 
         self.discriminator.trainable = False
-        #generator_tensorboard = TensorBoard(log_dir = tensorboard_path + '/generator',
-        #                                    update_freq='epoch')
         self.generator.compile(loss=perceptual_loss , optimizer= self.optimizer_cgan)#,
                                 #callbacks = [generator_tensorboard])
 
@@ -226,15 +198,11 @@ class Pix2Pix():
         CGAN_loss_weights = [2E-1, 2E-3, 1] # implement like equation 4 (lamda = 10)
         self.logger_model.info('Weights between L1 loss, perceptual loss and GAN loss is {}'.format(CGAN_loss_weights))
 
-        #CGAN_tensorboard = TensorBoard(log_dir = tensorboard_path + '/cgan',
-        #                                    update_freq='epoch')
 
         self.CGAN_model.compile(loss = CGAN_loss, loss_weights = CGAN_loss_weights,
                             optimizer = self.optimizer_cgan)# ,callbacks = [CGAN_tensorboard])
 
         self.discriminator.trainable = True #enable trainable for discriminator
-        #discriminator_tensorboard = TensorBoard(log_dir = tensorboard_path + '/discriminator',
-        #                                    update_freq='epoch')
         self.discriminator.compile(loss="binary_crossentropy",
                                     optimizer = self.optimizer_discriminator)#,
                                     #callbacks = [discriminator_tensorboard])
@@ -242,7 +210,6 @@ class Pix2Pix():
 
         # Prepare to write log file
 
-        # self.logger_model.info('Dataset name                                          {0} '.format(dataset_name))
         self.logger_traininfo.info('Image size:                                           {0} '.format(self.img_dim))
         self.logger_traininfo.info('Patch size:                                           {0} '.format(self.patch_dim))
         self.logger_traininfo.info('Number of patches for image:                          {0} '.format(self.num_patch))
@@ -254,19 +221,6 @@ class Pix2Pix():
         self.discriminator.summary(print_fn=self.logger_model.info)
         self.logger_model.info('CGAN summary:')
         self.CGAN_model.summary(print_fn=self.logger_model.info)
-
-        # print('Training start at '+str(datetime.datetime.now())+'\n', file = file_obj)
-        # print('Image size:      {0} \n Patch size:      {1} \n '.format(self.img_dim, self.patch_dim), file = file_obj)
-        # print('Number of patches:      {0} \n Data format:      {1} \n'.format(self.num_patch, self._data_format), file = file_obj)
-        # print('Batch size:      {0} \n Dataset name:      {1}\n'.format(self.batch_size, dataset_name), file = file_obj)
-        # print('Summary of generator: \n', file = file_obj)
-        # print(self.generator.summary(), file = file_obj)
-        # print('Summary of discriminator:\n', file = file_obj)
-        # print(self.discriminator.summary(), file = file_obj)
-        # print('Summary of cGAN model: \n', file = file_obj)
-        # print(self.CGAN_model.summary(), file = file_obj)
-
-
 
         # Save model structure
         # Write json and hdf5 to save model
@@ -282,10 +236,6 @@ class Pix2Pix():
 
         self.logger_traininfo.info('Training start at {}.......'.format(datetime.datetime.now()))
 
-        #print('Training start ...')
-        # batches_per_epoch = int(self.train_data_loader.get_data_size()/ self.batch_size)
-        # Initialize progbar to store model performance each batch
-        #progbar = generic_utils.Progbar(num_epoch * batches_per_epoch)
         training_history = {'Epoch':[],'Batch':[],'D_logloss_train_real':[],'D_logloss_train_fake':[],'G_tot_loss_train':[], 'G_l1loss_train':[], 'G_ploss_train':[], 'G_ganloss_train':[],
                                                   'D_logloss_val_real':[], 'D_logloss_val_fake':[], 'G_tot_loss_val':[], 'G_l1loss_val':[], 'G_ploss_val':[], 'G_ganloss_val':[]}
 
@@ -310,52 +260,6 @@ class Pix2Pix():
 
                 generated_patchs_real, generated_labels_real = data_utils.get_disc_batch(imgs_A, "real", patch_size, self._data_format, self.patch_overlapping_rate)
                 generated_patchs_fake, generated_labels_fake = data_utils.get_disc_batch(imgs_A_fake, "fake", patch_size, self._data_format, self.patch_overlapping_rate)
-
-
-                '''
-                # Generate patches for real images
-                generated_patchs_real, generated_labels_real = data_utils.get_disc_batch(imgs_A, imgs_B,
-                                                                                self.generator,
-                                                                                True,
-                                                                                patch_size,
-                                                                                self._data_format)
-                # Generate patches for fake images
-                generated_patchs_fake, generated_labels_fake = data_utils.get_disc_batch(imgs_A, imgs_B,
-                                                                                self.generator,
-                                                                                False,
-                                                                                patch_size,
-                                                                                self._data_format)
-
-                #print('generated label fake list {}'.format(generated_labels_fake))
-                #print('generated patches fake length {} dim {}'.format(len(generated_patchs_fake),generated_patchs_fake[0].shape))
-                #print('generated patches real length {} dim {}'.format(len(generated_patchs_real),generated_patchs_real[0].shape))
-                #print('generated patches label fake length {} dim {}'.format(len(generated_labels_fake),generated_labels_fake[0].shape))
-                #print('generated patches label real length {} dim {}'.format(len(generated_labels_real),generated_labels_real[0].shape))
-
-                # generated_patchs = generated_patchs_real + generated_patchs_fake
-
-
-
-
-                #if self._data_format == "channels_first":
-                generated_patchs = np.concatenate((generated_patchs_real, generated_patchs_fake), axis=1)
-                #    generated_labels = np.concatenate((generated_labels_real, generated_labels_fake), axis=1)
-                #else:
-                #    generated_patchs = np.concatenate((generated_patchs_real, generated_patchs_fake), axis=1)
-                #    generated_labels = np.concatenate((generated_labels_real, generated_labels_fake), axis=-1)
-                #print('generated patches dim after concatenate {}'.format(generated_patchs.shape))
-                generated_patchs = list(generated_patchs)
-                #print('generated patches dim after concatenate length {} dim for element {}'.format(len(generated_patchs),generated_patchs[0].shape))
-                generated_labels = np.concatenate((np.array(generated_labels_real),np.array(generated_labels_fake)))
-                # generated_labels = np.dstack((np.array(generated_labels_real),np.array(generated_labels_fake)))
-                # generated_labels = list(generated_labels)
-
-                # generated_labels = generated_labels_real + generated_labels_fake
-                #print('concatenated patches label dim {}'.format(generated_labels.shape))
-                # print('concatenated patches length {} dim {}'.format(len(generated_patchs),generated_patchs[0].shape))
-
-                '''
-
 
                 # Update discriminator
                 if batch_i % 3 == 2:
@@ -399,9 +303,8 @@ class Pix2Pix():
                 if batch_i % 30 == 29:
 
                     imgs_A_real_val, imgs_B_val = self.val_data_loader.load_data() # load whole data
-                    # imgs_A_fake_val = self.generator.predict(imgs_B_val)
-                    # Get all patches
 
+                    # Get all patches
                     imgs_A_fake_val = self.generator.predict(imgs_B_val)
 
                     generated_patchs_real_val, generated_labels_real_val = data_utils.get_disc_batch(imgs_A_real_val, "real", patch_size, self._data_format, self.patch_overlapping_rate)
@@ -415,35 +318,6 @@ class Pix2Pix():
 
                     self.logger_traininfo.info('Discriminator logloss of real image on validation                 {}'.format(training_history['D_logloss_val_real'][-1]))
                     self.logger_traininfo.info('Discriminator logloss of fake image on validation                 {}'.format(training_history['D_logloss_val_fake'][-1]))
-
-
-                    '''
-                    patchs_validation_real, labels_val_real = data_utils.get_disc_batch(imgs_A_real_val, imgs_B_val,
-                                                                                    self.generator,
-                                                                                    True,
-                                                                                    patch_size,
-                                                                                    self._data_format)
-                    patchs_validation_fake, labels_val_fake = data_utils.get_disc_batch(imgs_A_real_val, imgs_B_val,
-                                                                                    self.generator,
-                                                                                    False,
-                                                                                    patch_size,
-                                                                                    self._data_format)
-                    generated_patchs_val = np.concatenate((patchs_validation_real, patchs_validation_fake), axis=1)
-                    generated_patchs_val = list(generated_patchs_val)
-
-
-                    generated_labels_val = np.concatenate((np.array(labels_val_real),np.array(labels_val_fake)))
-                    '''
-
-                #if self._data_format == "channels_first":
-                #    generated_patchs_val = np.concatenate((patchs_validation_real, patchs_validation_fake), axis=1)
-                #    generated_labels_val = np.concatenate((labels_val_real, labels_val_fake), axis=1)
-                #else:
-                #    generated_patchs_val = np.concatenate((patchs_validation_real, patchs_validation_fake), axis=-1)
-                #    generated_labels_val = np.concatenate((labels_val_real, labels_val_fake), axis=-1)
-
-
-
 
                     labels_val = np.zeros((imgs_A_real_val.shape[0],2),dtype=np.uint8) # one-hot encoding
                     labels_val[:,1] = 1
@@ -468,20 +342,6 @@ class Pix2Pix():
                     training_history['G_l1loss_val'].append(None)
                     training_history['G_ploss_val'].append(None)
                     training_history['G_ganloss_val'].append(None)
-
-                # add loss history in progbar every batch
-
-
-                # progbar.add(1, values=[("Discriminator logloss on training", discriminator_loss),
-                #                        ("Generator total loss on training", genarator_loss[0]),
-                #                        ("Generator L1 loss on training", genarator_loss[1]),
-                #                        ("Generator log GAN loss on training", genarator_loss[2]),
-                #                        ("Discriminator log loss on validation", discriminator_loss_validation)])
-                # print('   Discriminator logloss on training: {0} \n   Generator total loss on training: {1}\n'.format(discriminator_loss,  genarator_loss[0]), file = file_obj)
-                # print('   Generator L1 loss on training: {0}\n   Generator log GAN loss on training: {1}\n'.format(genarator_loss[1], genarator_loss[2]), file = file_obj)
-                # print('   Discriminator log loss on validation: {0}\n'.format(discriminator_loss_validation), file = file_obj)
-
-
 
             time_elapse = time.time() - epoch_training_start_time # Unit [s]
             self.logger_traininfo.info('Epoch {0} costs {1}s'.format(epoch_iterator, time_elapse))
@@ -518,21 +378,13 @@ class Pix2Pix():
         '''
         try:
             self.train_data_loader = NPY_DataLoader(path, img_res =  (self.img_rows, self.img_cols))
-            # self.train_data_loader = DataLoader(dataset_name, img_res = (self.img_rows, self.img_cols), path = path)
         except:
             print("Training data fails to load")
 
         try:
             self.val_data_loader = NPY_DataLoader(path, img_res = (self.img_rows, self.img_cols), data_type = "val")
-            # self.val_data_loader = DataLoader(dataset_name, img_res = (self.img_rows, self.img_cols), data_type = "val", path = path)
         except:
             print("Validation data fails to load")
-
-        #
-        #try:
-        #    self.test_data_loader = NPY_DataLoader(path, img_res = (self.img_rows, self.img_cols), data_type = "test")
-        #except:
-        #    print("Test data fails to load")
 
 
     def build_generator(self,is_deconv = True):
@@ -564,25 +416,18 @@ class Pix2Pix():
                     512: ["C64","C128","C256","C512","C512","C512","C512","C512","C512"]}
 
         unet_encoder_filters = switcher.get(min(self.img_rows, self.img_cols), "Invalid img size") # ensure the last activation tensor the shape
-        # unet_encoder_filters= ["C64","C128","C256","C512","C512","C512","C512","C512"]
         self.logger_model.info('UNet generator encoder filters : {}'.format(unet_encoder_filters))
 
         unet_input_layer = Input(shape=self.img_dim, name="UNet_input")
         encoder = unet_input_layer
         encoder_list = [encoder]
         for encoder_i, encoder_filter in enumerate(unet_encoder_filters):
-            # print('Encoder layer {} filter {}'.format(encoder_i, encoder_filter))
             filters = int(encoder_filter[1:])
             if encoder_i == 0:
                 encoder = self.conv_block(encoder, filters, encoder_index = encoder_i, filter_name = encoder_filter, is_BatchNorm = False)
             else:
                 encoder = self.conv_block(encoder, filters, encoder_index = encoder_i, filter_name = encoder_filter)
             encoder_list.append(encoder)
-
-
-        #unet_generator_encoder = Model(input = [input_layer], output = [encoder])
-        #print('UNet generator encoder summary:')
-        #print(unet_generator_encoder.summary())
 
         # ------------------------------------------------------------
         # Build decoder CD512-CD1024-CD1024-C1024-C1024-C512-C256-C128
@@ -598,8 +443,6 @@ class Pix2Pix():
 
         unet_decoder_filters = switcher.get(min(self.img_rows, self.img_cols), "Invalid img size") # ensure the last activation tensor the shape
         self.logger_model.info('UNet generator decoder filters: {}'.format(unet_decoder_filters))
-
-        # unet_decoder_filters = ["CD512","CD1024","CD1024","C1024","C1024","C512","C256","C128"]
 
         decoder =  encoder_list[-1]
         decoder_list = [decoder]
@@ -797,55 +640,8 @@ class Pix2Pix():
 
         # Iterate over all patch to generate input list (all the same as the discriminator_input layer)
         patch_input_list = [Input(shape=self.patch_dim, name="Discriminator_patch_"+str(i_patch)+'_input') for i_patch in range(self.num_patch)]
-        #print('patch input list {}'.format(patch_input_list))
         # Iterate over all patch input list to get tensor after discriminator
         patch_discriminator_output_list = [PatchGAN(patch_input)[0] for patch_input in patch_input_list]
-        '''
-        patch_discriminator_output_flatten_list = [PatchGAN(patch_input)[1] for patch_input in patch_input_list]
-
-        #print('patch loss output {}'.format(patch_discriminator_output_list))
-        #print('patch feature output {}'.format(patch_discriminator_output_flatten_list))
-        # If there are multiple patches, concatenate them for later calculation of average loss_weights
-        if len(patch_discriminator_output_list) > 1:
-            if self._data_format == "channels_first":
-                patch_loss = Concatenate(axis = 1, name ='discriminator_patch_loss_Concatenate')([patch_discriminator_output for patch_discriminator_output in patch_discriminator_output_list])
-                patch_mbd = Concatenate(axis = 1, name ='discriminator_patch_feature_Concatenate')([patch_discriminator_output_flatten for patch_discriminator_output_flatten in patch_discriminator_output_flatten_list])
-            else:
-                patch_loss = Concatenate(axis = -1, name ='discriminator_patch_loss_Concatenate')([patch_discriminator_output for patch_discriminator_output in patch_discriminator_output_list])
-                patch_mbd = Concatenate(axis = -1, name = 'discriminator_patch_feature_Concatenate')([patch_discriminator_output_flatten for patch_discriminator_output_flatten in patch_discriminator_output_flatten_list])
-        else:
-            patch_loss = patch_discriminator_output_list[0]
-            patch_mbd = patch_discriminator_output_flatten_list[0]
-        #print('patch loss {}'.format(patch_loss))
-        #print('patch mbd feature {}'.format(patch_mbd))
-
-        # Implement mini batch discrimination (put all patches as one batch, then do the optimization on "mini-batch")
-        # Concatenate all sample information about how different the input features for the sample are from to that of
-        # others in the same minibatch [Salimans et. al. (2016)]. Useful to prevent GAN from collapsing to a single
-        # output.
-
-        #x = patch_loss
-        #x_mbd = patch_mbd
-
-
-        num_kernels = 100
-        dim_per_kernel = 5
-
-        # All patch feature in the batch is applied with Dense layer (NO activation function)
-        Mask = Dense(num_kernels * dim_per_kernel, bias=False, activation=None)
-        # Mini batch discrimination
-        MBD = Lambda(minb_disc, output_shape=lambda_output)
-
-        patch_mbd = Mask(patch_mbd)
-        patch_mbd = Reshape((num_kernels, dim_per_kernel))(patch_mbd)
-        patch_mbd = MBD(patch_mbd)
-        if self._data_format == "channels_first":
-            x = Concatenate(axis = 1)([patch_loss, patch_mbd])
-        else:
-            x = Concatenate(axis = -1)([patch_loss, patch_mbd])
-
-        x_out = Dense(2, activation="softmax", name="disc_output")(x)
-        '''
 
         print('patch_discriminator_output_list: {}'.format(patch_discriminator_output_list))
         # Average patch_discriminator_output_list
